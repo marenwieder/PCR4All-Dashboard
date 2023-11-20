@@ -1,0 +1,472 @@
+---
+title: "Data Prep"
+output: html_document
+date: "2023-11-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load packages
+```{r}
+library(readxl)
+```
+
+Read data
+```{r}
+export_44 <- read_excel("S:/PROJACTIVE/PCR-4-ALL/02_Daten_clean/Maren/Kalenderwoche 44/pcr4all_data_wk44_231109.xlsx")
+export_45 <- read_excel("S:/PROJACTIVE/PCR-4-ALL/02_Daten_clean/Maren/Kalenderwoche 45/pcr4all_data_wk45_231117.xlsx")
+```
+
+Define functions
+```{r}
+#function for binomial proportion CI (region)
+get_bpci <- function(d = "SARS", r = "Aachen", dat = export_44){
+  
+  result <- c(0,0,1,0)
+  
+  if(d == "SARS"){
+    pos <- length(which(dat$"970_Woe_ST_SARS" == 2 & dat$Region == r))
+    neg <- length(which(dat$"970_Woe_ST_SARS" == 1 & dat$Region == r))
+    if(pos + neg > 0){
+      temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+      result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+    } 
+  } else if (d == "Influenza_A") {
+    pos <- length(which(dat$"970_Woe_ST_INFLU_Positiv (Influenza A)" == 1 & dat$Region == r))
+    neg <- length(which(dat$"970_Woe_ST_INFLU_Negativ (Influenza A)" == 1 & dat$Region == r))
+    if(pos + neg > 0){
+      temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+      result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+    } 
+  } else if (d == "Influenza_B") {
+    pos <- length(which(dat$"970_Woe_ST_INFLU_Positiv (Influenza B)" == 1 & dat$Region == r))
+    neg <- length(which(dat$"970_Woe_ST_INFLU_Negativ (Influenza B)" == 1 & dat$Region == r))
+    if(pos + neg > 0){
+      temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+      result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+    } 
+  } else if (d == "RSV") {
+    pos <- length(which(dat$"970_Woe_ST_RSV" == 2 & dat$Region == r))
+    neg <- length(which(dat$"970_Woe_ST_RSV" == 1 & dat$Region == r))
+    if(pos + neg > 0){
+      temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+      result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+    } 
+  }
+  
+  if(r == "Gesamt"){
+    if(d == "SARS"){
+      pos <- length(which(dat$"970_Woe_ST_SARS" == 2))
+      neg <- length(which(dat$"970_Woe_ST_SARS" == 1))
+      if(pos + neg > 0){
+        temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+        result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+      } 
+    } else if (d == "Influenza_A") {
+      pos <- length(which(dat$"970_Woe_ST_INFLU_Positiv (Influenza A)" == 1))
+      neg <- length(which(dat$"970_Woe_ST_INFLU_Negativ (Influenza A)" == 1))
+      if(pos + neg > 0){
+        temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+        result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+      } 
+    } else if (d == "Influenza_B") {
+      pos <- length(which(dat$"970_Woe_ST_INFLU_Positiv (Influenza B)" == 1))
+      neg <- length(which(dat$"970_Woe_ST_INFLU_Negativ (Influenza B)" == 1))
+      if(pos + neg > 0){
+        temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+        result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+      } 
+    } else if (d == "RSV") {
+      pos <- length(which(dat$"970_Woe_ST_RSV" == 2))
+      neg <- length(which(dat$"970_Woe_ST_RSV" == 1))
+      if(pos + neg > 0){
+        temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+        result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+      } 
+    }
+  }
+  
+  return(result)
+}
+```
+
+```{r}
+#function for binomial proportion CI (age)
+get_bpci_age <- function(d = "SARS", r = "<30", dat = export_44){
+  
+  result <- c(0,0,1,0)
+  
+  if(d == "SARS"){
+    pos <- length(which(dat$"970_Woe_ST_SARS" == 2 & dat$age_category == r))
+    neg <- length(which(dat$"970_Woe_ST_SARS" == 1 & dat$age_category == r))
+    if(pos + neg > 0){
+      temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+      result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+    } 
+  } else if (d == "Influenza_A") {
+    pos <- length(which(dat$"970_Woe_ST_INFLU_Positiv (Influenza A)" == 1 & dat$age_category == r))
+    neg <- length(which(dat$"970_Woe_ST_INFLU_Negativ (Influenza A)" == 1 & dat$age_category == r))
+    if(pos + neg > 0){
+      temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+      result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+    } 
+  } else if (d == "Influenza_B") {
+    pos <- length(which(dat$"970_Woe_ST_INFLU_Positiv (Influenza B)" == 1 & dat$age_category == r))
+    neg <- length(which(dat$"970_Woe_ST_INFLU_Negativ (Influenza B)" == 1 & dat$age_category == r))
+    if(pos + neg > 0){
+      temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+      result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+    } 
+  } else if (d == "RSV") {
+    pos <- length(which(dat$"970_Woe_ST_RSV" == 2 & dat$age_category == r))
+    neg <- length(which(dat$"970_Woe_ST_RSV" == 1 & dat$age_category == r))
+    if(pos + neg > 0){
+      temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+      result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+    } 
+  }
+  
+  if(r == "Gesamt"){
+    if(d == "SARS"){
+      pos <- length(which(dat$"970_Woe_ST_SARS" == 2))
+      neg <- length(which(dat$"970_Woe_ST_SARS" == 1))
+      if(pos + neg > 0){
+        temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+        result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+      } 
+    } else if (d == "Influenza_A") {
+      pos <- length(which(dat$"970_Woe_ST_INFLU_Positiv (Influenza A)" == 1))
+      neg <- length(which(dat$"970_Woe_ST_INFLU_Negativ (Influenza A)" == 1))
+      if(pos + neg > 0){
+        temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+        result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+      } 
+    } else if (d == "Influenza_B") {
+      pos <- length(which(dat$"970_Woe_ST_INFLU_Positiv (Influenza B)" == 1))
+      neg <- length(which(dat$"970_Woe_ST_INFLU_Negativ (Influenza B)" == 1))
+      if(pos + neg > 0){
+        temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+        result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+      } 
+    } else if (d == "RSV") {
+      pos <- length(which(dat$"970_Woe_ST_RSV" == 2))
+      neg <- length(which(dat$"970_Woe_ST_RSV" == 1))
+      if(pos + neg > 0){
+        temp <- prop.test(x = pos, n = pos + neg, conf.level = 0.95, correct = F)
+        result <- c(unname(temp$estimate), temp$conf.int[1], temp$conf.int[2], pos/100) * 100
+      } 
+    }
+  }
+  
+  return(result)
+}
+```
+
+```{r}
+# calculate total table (per week)
+total_table <- function(week = 44, dat = export_44){
+  df_region_g <- data.frame(Week = c(week, week, week, week),
+                            Virus = c("SARS", "Influenza A", "Influenza B", "RSV"),
+                            Positive = c(length(which(dat$"970_Woe_ST_SARS" == 2)),
+                                         length(which(dat$"970_Woe_ST_INFLU_Positiv (Influenza A)" == 1)),
+                                         length(which(dat$"970_Woe_ST_INFLU_Positiv (Influenza B)" == 1)),
+                                         length(which(dat$"970_Woe_ST_RSV" == 2))),
+                            Positivrate = c(get_bpci("SARS", "Gesamt", dat = dat)[1], 
+                                            get_bpci("Influenza_A", "Gesamt", dat = dat)[1],
+                                            get_bpci("Influenza_B", "Gesamt", dat = dat)[1], 
+                                            get_bpci("RSV", "Gesamt", dat = dat)[1]),
+                            Lower = c(get_bpci("SARS", "Gesamt", dat = dat)[2], 
+                                      get_bpci("Influenza_A", "Gesamt", dat = dat)[2],
+                                      get_bpci("Influenza_B", "Gesamt", dat = dat)[2], 
+                                      get_bpci("RSV", "Gesamt", dat = dat)[2]),
+                            Upper = c(get_bpci("SARS", "Gesamt", dat = dat)[3], 
+                                      get_bpci("Influenza_A", "Gesamt", dat = dat)[3],
+                                      get_bpci("Influenza_B", "Gesamt", dat = dat)[3], 
+                                      get_bpci("RSV", "Gesamt", dat = dat)[3]),
+                            Abstriche = c(length(dat$Region), length(dat$Region), 
+                                          length(dat$Region), length(dat$Region)))
+}
+```
+
+```{r}
+#calculate region table (per week)
+region_table <- function(week = 44, dat = export_44) {
+  result <- data.frame(Week = c(week, week, week, week, week, week, week),
+                        Region = c("Aachen", "Chemnitz", "Freiburg", "Greifswald", 
+                                   "Magdeburg", "Reutlingen", "Gesamt"),
+                        SARS = c(get_bpci(d = "SARS", r = "Aachen", dat = dat)[4], 
+                                 get_bpci(d = "SARS", r = "Chemnitz", dat = dat)[4],
+                                 get_bpci(d = "SARS", r = "Freiburg", dat = dat)[4], 
+                                 get_bpci("SARS", "Greifswald", dat = dat)[4],
+                                 get_bpci("SARS", "Magdeburg", dat = dat)[4], 
+                                 get_bpci("SARS", "Reutlingen", dat = dat)[4],
+                                 get_bpci("SARS", "Gesamt", dat = dat)[4]),
+                        SARS_pr = c(get_bpci(d = "SARS", r = "Aachen", dat = dat)[1], 
+                                    get_bpci(d = "SARS", r = "Chemnitz", dat = dat)[1],
+                                    get_bpci(d = "SARS", r = "Freiburg", dat = dat)[1], 
+                                    get_bpci("SARS", "Greifswald", dat = dat)[1],
+                                    get_bpci("SARS", "Magdeburg", dat = dat)[1], 
+                                    get_bpci("SARS", "Reutlingen", dat = dat)[1],
+                                    get_bpci("SARS", "Gesamt", dat = dat)[1]),
+                        SARS_l = c(get_bpci("SARS", "Aachen", dat = dat)[2], 
+                                   get_bpci("SARS", "Chemnitz", dat = dat)[2],
+                                   get_bpci("SARS", "Freiburg", dat = dat)[2], 
+                                   get_bpci("SARS", "Greifswald", dat = dat)[2],
+                                   get_bpci("SARS", "Magdeburg", dat = dat)[2], 
+                                   get_bpci("SARS", "Reutlingen", dat = dat)[2],
+                                   get_bpci("SARS", "Gesamt", dat = dat)[2]),
+                        SARS_u = c(get_bpci("SARS", "Aachen", dat = dat)[3], 
+                                   get_bpci("SARS", "Chemnitz", dat = dat)[3],
+                                   get_bpci("SARS", "Freiburg", dat = dat)[3], 
+                                   get_bpci("SARS", "Greifswald", dat = dat)[3],
+                                   get_bpci("SARS", "Magdeburg", dat = dat)[3], 
+                                   get_bpci("SARS", "Reutlingen", dat = dat)[3],
+                                   get_bpci("SARS", "Gesamt", dat = dat)[3]),
+                        Influenza_A = c(get_bpci("Influenza_A", "Aachen", dat = dat)[4],
+                                        get_bpci("Influenza_A", "Chemnitz", dat = dat)[4],
+                                        get_bpci("Influenza_A", "Freiburg", dat = dat)[4],
+                                        get_bpci("Influenza_A", "Greifswald", dat = dat)[4],
+                                        get_bpci("Influenza_A", "Magdeburg", dat = dat)[4],
+                                        get_bpci("Influenza_A", "Reutlingen", dat = dat)[4],
+                                        get_bpci("Influenza_A", "Gesamt", dat = dat)[4]),
+                        Influenza_A_pr = c(get_bpci("Influenza_A", "Aachen", dat = dat)[1],
+                                           get_bpci("Influenza_A", "Chemnitz", dat = dat)[1],
+                                           get_bpci("Influenza_A", "Freiburg", dat = dat)[1],
+                                           get_bpci("Influenza_A", "Greifswald", dat = dat)[1],
+                                           get_bpci("Influenza_A", "Magdeburg", dat = dat)[1],
+                                           get_bpci("Influenza_A", "Reutlingen", dat = dat)[1],
+                                           get_bpci("Influenza_A", "Gesamt", dat = dat)[1]),
+                        Influenza_A_l = c(get_bpci("Influenza_A", "Aachen", dat = dat)[2],
+                                          get_bpci("Influenza_A", "Chemnitz", dat = dat)[2],
+                                          get_bpci("Influenza_A", "Freiburg", dat = dat)[2],
+                                          get_bpci("Influenza_A", "Greifswald", dat = dat)[2],
+                                          get_bpci("Influenza_A", "Magdeburg", dat = dat)[2],
+                                          get_bpci("Influenza_A", "Reutlingen", dat = dat)[2],
+                                          get_bpci("Influenza_A", "Gesamt", dat = dat)[2]),
+                        Influenza_A_u = c(get_bpci("Influenza_A", "Aachen", dat = dat)[3],
+                                          get_bpci("Influenza_A", "Chemnitz", dat = dat)[3],
+                                          get_bpci("Influenza_A", "Freiburg", dat = dat)[3],
+                                          get_bpci("Influenza_A", "Greifswald", dat = dat)[3],
+                                          get_bpci("Influenza_A", "Magdeburg", dat = dat)[3],
+                                          get_bpci("Influenza_A", "Reutlingen", dat = dat)[3],
+                                          get_bpci("Influenza_A", "Gesamt", dat = dat)[3]),
+                        Influenza_B = c(get_bpci("Influenza_B", "Aachen", dat = dat)[4],
+                                        get_bpci("Influenza_B", "Chemnitz", dat = dat)[4],
+                                        get_bpci("Influenza_B", "Freiburg", dat = dat)[4],
+                                        get_bpci("Influenza_B", "Greifswald", dat = dat)[4],
+                                        get_bpci("Influenza_B", "Magdeburg", dat = dat)[4],
+                                        get_bpci("Influenza_B", "Reutlingen", dat = dat)[4],
+                                        get_bpci("Influenza_B", "Gesamt", dat = dat)[4]),
+                        Influenza_B_pr = c(get_bpci("Influenza_B", "Aachen", dat = dat)[1],
+                                           get_bpci("Influenza_B", "Chemnitz", dat = dat)[1],
+                                           get_bpci("Influenza_B", "Freiburg", dat = dat)[1],
+                                           get_bpci("Influenza_B", "Greifswald", dat = dat)[1],
+                                           get_bpci("Influenza_B", "Magdeburg", dat = dat)[1],
+                                           get_bpci("Influenza_B", "Reutlingen", dat = dat)[1],
+                                           get_bpci("Influenza_B", "Gesamt", dat = dat)[1]),
+                        Influenza_B_l = c(get_bpci("Influenza_B", "Aachen", dat = dat)[2],
+                                          get_bpci("Influenza_B", "Chemnitz", dat = dat)[2],
+                                          get_bpci("Influenza_B", "Freiburg", dat = dat)[2],
+                                          get_bpci("Influenza_B", "Greifswald", dat = dat)[2],
+                                          get_bpci("Influenza_B", "Magdeburg", dat = dat)[2],
+                                          get_bpci("Influenza_B", "Reutlingen", dat = dat)[2],
+                                          get_bpci("Influenza_B", "Gesamt", dat = dat)[2]),
+                        Influenza_B_u = c(get_bpci("Influenza_B", "Aachen", dat = dat)[3],
+                                          get_bpci("Influenza_B", "Chemnitz", dat = dat)[3],
+                                          get_bpci("Influenza_B", "Freiburg", dat = dat)[3],
+                                          get_bpci("Influenza_B", "Greifswald", dat = dat)[3],
+                                          get_bpci("Influenza_B", "Magdeburg", dat = dat)[3],
+                                          get_bpci("Influenza_B", "Reutlingen", dat = dat)[3],
+                                          get_bpci("Influenza_B", "Gesamt", dat = dat)[3]),
+                        RSV = c(get_bpci("RSV", "Aachen", dat = dat)[4],
+                                get_bpci("RSV", "Chemnitz", dat = dat)[4],
+                                get_bpci("RSV", "Freiburg", dat = dat)[4],
+                                get_bpci("RSV", "Greifswald", dat = dat)[4],
+                                get_bpci("RSV", "Magdeburg", dat = dat)[4],
+                                get_bpci("RSV", "Reutlingen", dat = dat)[4],
+                                get_bpci("RSV", "Gesamt", dat = dat)[4]),
+                        RSV_pr = c(get_bpci("RSV", "Aachen", dat = dat)[1],
+                                   get_bpci("RSV", "Chemnitz", dat = dat)[1],
+                                   get_bpci("RSV", "Freiburg", dat = dat)[1],
+                                   get_bpci("RSV", "Greifswald", dat = dat)[1],
+                                   get_bpci("RSV", "Magdeburg", dat = dat)[1],
+                                   get_bpci("RSV", "Reutlingen", dat = dat)[1],
+                                   get_bpci("RSV", "Gesamt", dat = dat)[1]),
+                        RSV_l = c(get_bpci("RSV", "Aachen", dat = dat)[2],
+                                  get_bpci("RSV", "Chemnitz", dat = dat)[2],
+                                  get_bpci("RSV", "Freiburg", dat = dat)[2],
+                                  get_bpci("RSV", "Greifswald", dat = dat)[2],
+                                  get_bpci("RSV", "Magdeburg", dat = dat)[2],
+                                  get_bpci("RSV", "Reutlingen", dat = dat)[2],
+                                  get_bpci("RSV", "Gesamt", dat = dat)[2]),
+                        RSV_u = c(get_bpci("RSV", "Aachen", dat = dat)[3],
+                                  get_bpci("RSV", "Chemnitz", dat = dat)[3],
+                                  get_bpci("RSV", "Freiburg", dat = dat)[3],
+                                  get_bpci("RSV", "Greifswald", dat = dat)[3],
+                                  get_bpci("RSV", "Magdeburg", dat = dat)[3],
+                                  get_bpci("RSV", "Reutlingen", dat = dat)[3],
+                                  get_bpci("RSV", "Gesamt", dat = dat)[3]))
+  return(result)
+}
+```
+
+
+```{r}
+#calculate age table (per week)
+age_table <- function(week = 44, dat = export_44) {
+  result <- data.frame(Week = c(week, week, week, week, week, week, week),
+                        Age_Group = c("<30", "30-39", "40-49", "50-59", 
+                                   "60-69", "70+", "Gesamt"),
+                        SARS = c(get_bpci_age(d = "SARS", r = "<30", dat = dat)[4], 
+                                 get_bpci_age(d = "SARS", r = "30-39", dat = dat)[4],
+                                 get_bpci_age(d = "SARS", r = "40-49", dat = dat)[4], 
+                                 get_bpci_age("SARS", "50-59", dat = dat)[4],
+                                 get_bpci_age("SARS", "60-69", dat = dat)[4], 
+                                 get_bpci_age("SARS", "70+", dat = dat)[4],
+                                 get_bpci_age("SARS", "Gesamt", dat = dat)[4]),
+                        SARS_pr = c(get_bpci_age(d = "SARS", r = "<30", dat = dat)[1], 
+                                    get_bpci_age(d = "SARS", r = "30-39", dat = dat)[1],
+                                    get_bpci_age(d = "SARS", r = "40-49", dat = dat)[1], 
+                                    get_bpci_age("SARS", "50-59", dat = dat)[1],
+                                    get_bpci_age("SARS", "60-69", dat = dat)[1], 
+                                    get_bpci_age("SARS", "70+", dat = dat)[1],
+                                    get_bpci_age("SARS", "Gesamt", dat = dat)[1]),
+                        SARS_l = c(get_bpci_age("SARS", "<30", dat = dat)[2], 
+                                   get_bpci_age("SARS", "30-39", dat = dat)[2],
+                                   get_bpci_age("SARS", "40-49", dat = dat)[2], 
+                                   get_bpci_age("SARS", "50-59", dat = dat)[2],
+                                   get_bpci_age("SARS", "60-69", dat = dat)[2], 
+                                   get_bpci_age("SARS", "70+", dat = dat)[2],
+                                   get_bpci_age("SARS", "Gesamt", dat = dat)[2]),
+                        SARS_u = c(get_bpci_age("SARS", "<30", dat = dat)[3], 
+                                   get_bpci_age("SARS", "30-39", dat = dat)[3],
+                                   get_bpci_age("SARS", "40-49", dat = dat)[3], 
+                                   get_bpci_age("SARS", "50-59", dat = dat)[3],
+                                   get_bpci_age("SARS", "60-69", dat = dat)[3], 
+                                   get_bpci_age("SARS", "70+", dat = dat)[3],
+                                   get_bpci_age("SARS", "Gesamt", dat = dat)[3]),
+                        Influenza_A = c(get_bpci_age("Influenza_A", "<30", dat = dat)[4],
+                                        get_bpci_age("Influenza_A", "30-39", dat = dat)[4],
+                                        get_bpci_age("Influenza_A", "40-49", dat = dat)[4],
+                                        get_bpci_age("Influenza_A", "50-59", dat = dat)[4],
+                                        get_bpci_age("Influenza_A", "60-69", dat = dat)[4],
+                                        get_bpci_age("Influenza_A", "70+", dat = dat)[4],
+                                        get_bpci_age("Influenza_A", "Gesamt", dat = dat)[4]),
+                        Influenza_A_pr = c(get_bpci_age("Influenza_A", "<30", dat = dat)[1],
+                                           get_bpci_age("Influenza_A", "30-39", dat = dat)[1],
+                                           get_bpci_age("Influenza_A", "40-49", dat = dat)[1],
+                                           get_bpci_age("Influenza_A", "50-59", dat = dat)[1],
+                                           get_bpci_age("Influenza_A", "60-69", dat = dat)[1],
+                                           get_bpci_age("Influenza_A", "70+", dat = dat)[1],
+                                           get_bpci_age("Influenza_A", "Gesamt", dat = dat)[1]),
+                        Influenza_A_l = c(get_bpci_age("Influenza_A", "<30", dat = dat)[2],
+                                          get_bpci_age("Influenza_A", "30-39", dat = dat)[2],
+                                          get_bpci_age("Influenza_A", "40-49", dat = dat)[2],
+                                          get_bpci_age("Influenza_A", "50-59", dat = dat)[2],
+                                          get_bpci_age("Influenza_A", "60-69", dat = dat)[2],
+                                          get_bpci_age("Influenza_A", "70+", dat = dat)[2],
+                                          get_bpci_age("Influenza_A", "Gesamt", dat = dat)[2]),
+                        Influenza_A_u = c(get_bpci_age("Influenza_A", "<30", dat = dat)[3],
+                                          get_bpci_age("Influenza_A", "30-39", dat = dat)[3],
+                                          get_bpci_age("Influenza_A", "40-49", dat = dat)[3],
+                                          get_bpci_age("Influenza_A", "50-59", dat = dat)[3],
+                                          get_bpci_age("Influenza_A", "60-69", dat = dat)[3],
+                                          get_bpci_age("Influenza_A", "70+", dat = dat)[3],
+                                          get_bpci_age("Influenza_A", "Gesamt", dat = dat)[3]),
+                        Influenza_B = c(get_bpci_age("Influenza_B", "<30", dat = dat)[4],
+                                        get_bpci_age("Influenza_B", "30-39", dat = dat)[4],
+                                        get_bpci_age("Influenza_B", "40-49", dat = dat)[4],
+                                        get_bpci_age("Influenza_B", "50-59", dat = dat)[4],
+                                        get_bpci_age("Influenza_B", "60-69", dat = dat)[4],
+                                        get_bpci_age("Influenza_B", "70+", dat = dat)[4],
+                                        get_bpci_age("Influenza_B", "Gesamt", dat = dat)[4]),
+                        Influenza_B_pr = c(get_bpci_age("Influenza_B", "<30", dat = dat)[1],
+                                           get_bpci_age("Influenza_B", "30-39", dat = dat)[1],
+                                           get_bpci_age("Influenza_B", "40-49", dat = dat)[1],
+                                           get_bpci_age("Influenza_B", "50-59", dat = dat)[1],
+                                           get_bpci_age("Influenza_B", "60-69", dat = dat)[1],
+                                           get_bpci_age("Influenza_B", "70+", dat = dat)[1],
+                                           get_bpci_age("Influenza_B", "Gesamt", dat = dat)[1]),
+                        Influenza_B_l = c(get_bpci_age("Influenza_B", "<30", dat = dat)[2],
+                                          get_bpci_age("Influenza_B", "30-39", dat = dat)[2],
+                                          get_bpci_age("Influenza_B", "40-49", dat = dat)[2],
+                                          get_bpci_age("Influenza_B", "50-59", dat = dat)[2],
+                                          get_bpci_age("Influenza_B", "60-69", dat = dat)[2],
+                                          get_bpci_age("Influenza_B", "70+", dat = dat)[2],
+                                          get_bpci_age("Influenza_B", "Gesamt", dat = dat)[2]),
+                        Influenza_B_u = c(get_bpci_age("Influenza_B", "<30", dat = dat)[3],
+                                          get_bpci_age("Influenza_B", "30-39", dat = dat)[3],
+                                          get_bpci_age("Influenza_B", "40-49", dat = dat)[3],
+                                          get_bpci_age("Influenza_B", "50-59", dat = dat)[3],
+                                          get_bpci_age("Influenza_B", "60-69", dat = dat)[3],
+                                          get_bpci_age("Influenza_B", "70+", dat = dat)[3],
+                                          get_bpci_age("Influenza_B", "Gesamt", dat = dat)[3]),
+                        RSV = c(get_bpci_age("RSV", "<30", dat = dat)[4],
+                                get_bpci_age("RSV", "30-39", dat = dat)[4],
+                                get_bpci_age("RSV", "40-49", dat = dat)[4],
+                                get_bpci_age("RSV", "50-59", dat = dat)[4],
+                                get_bpci_age("RSV", "60-69", dat = dat)[4],
+                                get_bpci_age("RSV", "70+", dat = dat)[4],
+                                get_bpci_age("RSV", "Gesamt", dat = dat)[4]),
+                        RSV_pr = c(get_bpci_age("RSV", "<30", dat = dat)[1],
+                                   get_bpci_age("RSV", "30-39", dat = dat)[1],
+                                   get_bpci_age("RSV", "40-49", dat = dat)[1],
+                                   get_bpci_age("RSV", "50-59", dat = dat)[1],
+                                   get_bpci_age("RSV", "60-69", dat = dat)[1],
+                                   get_bpci_age("RSV", "70+", dat = dat)[1],
+                                   get_bpci_age("RSV", "Gesamt", dat = dat)[1]),
+                        RSV_l = c(get_bpci_age("RSV", "<30", dat = dat)[2],
+                                  get_bpci_age("RSV", "30-39", dat = dat)[2],
+                                  get_bpci_age("RSV", "40-49", dat = dat)[2],
+                                  get_bpci_age("RSV", "50-59", dat = dat)[2],
+                                  get_bpci_age("RSV", "60-69", dat = dat)[2],
+                                  get_bpci_age("RSV", "70+", dat = dat)[2],
+                                  get_bpci_age("RSV", "Gesamt", dat = dat)[2]),
+                        RSV_u = c(get_bpci_age("RSV", "<30", dat = dat)[3],
+                                  get_bpci_age("RSV", "30-39", dat = dat)[3],
+                                  get_bpci_age("RSV", "40-49", dat = dat)[3],
+                                  get_bpci_age("RSV", "50-59", dat = dat)[3],
+                                  get_bpci_age("RSV", "60-69", dat = dat)[3],
+                                  get_bpci_age("RSV", "70+", dat = dat)[3],
+                                  get_bpci_age("RSV", "Gesamt", dat = dat)[3]))
+  return(result)
+}
+```
+
+
+
+Calculate tables
+```{r}
+#weekly total table
+table_t44 <- total_table(44, export_44)
+table_t45 <- total_table(45, export_45)
+table_t <- rbind(table_t44, table_t45)
+```
+
+```{r}
+#weekly region table
+table_r44 <- region_table(44, export_44)
+table_r45 <- region_table(45, export_45)
+table_r <- rbind(table_r44, table_r45)
+```
+
+```{r}
+#weekly age table
+table_a44 <- age_table(44, export_44)
+table_a45 <- age_table(45, export_45)
+table_a <- rbind(table_a44, table_a45)
+```
+
+
+
+Save data table for Shiny
+```{r}
+saveRDS(table_t, file = "Total.RDS")
+saveRDS(table_r, file = "Region.RDS")
+saveRDS(table_a, file = "Age.RDS")
+```
+
+
+
